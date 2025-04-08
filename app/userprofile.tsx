@@ -1,9 +1,9 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ImageBackground, StatusBar, Image, TouchableOpacity, Modal, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, StatusBar, Image, TouchableOpacity, Modal, Pressable, Alert, TextInput } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { getDatabase, ref, get } from 'firebase/database';
+import { getDatabase, ref, get, update } from 'firebase/database';
 import { getAuth, signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -32,8 +32,6 @@ export default function UserProfile() {
     fetchUserData();
   }, []);
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalText, setModalText] = useState('');
   const [userImage, setUserImage] = useState(require('../assets/images/user.png'));
 
   const handleImagePicker = async () => {
@@ -54,13 +52,22 @@ export default function UserProfile() {
     }
   };
 
-  const handleArrowPress = (text) => {
-    setModalText(text);
-    setModalVisible(true);
-  };
+  const handleArrowPress = (title, message) => {
+    Alert.alert(
+      title,
+      message,
+      [{ text: 'OK' }],
+      { cancelable: true }
+    );
+  };  
 
-  const closeModal = () => {
-    setModalVisible(false);
+  const handleArrowPress2 = (vehicleType, vehicleColor, plateNumber) => {
+    Alert.alert(
+      'Car Information',
+      `Vehicle Type: ${vehicleType || 'N/A'}\nVehicle Color: ${vehicleColor || 'N/A'}\nPlate Number: ${plateNumber || 'N/A'}`,
+      [{ text: 'OK' }],
+      { cancelable: true }
+    );
   };
 
   const handleLogOut = async () => {
@@ -74,6 +81,49 @@ export default function UserProfile() {
     } catch (error) {
       console.error('Sign Out error:', error.message);
       Alert.alert('Log Out Failed', error.message);
+    }
+  };
+
+  const [isEditModalVisible, setEditModalVisible] = useState(false);
+  const [editedFullName, setEditedFullName] = useState('');
+  const [editedContactNumber, setEditedContactNumber] = useState('');
+  const [editedEmail, setEditedEmail] = useState('');
+
+  const handleEditProfile = () => {
+    setEditedFullName(userData?.fullName || '');
+    setEditedContactNumber(userData?.contactNumber || '');
+    setEditedEmail(userData?.email || '');
+    setEditModalVisible(true);
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (user) {
+        const db = getDatabase();
+        const userRef = ref(db, `users/${user.uid}`);
+
+        await update(userRef, {
+          fullName: editedFullName,
+          contactNumber: editedContactNumber,
+          email: editedEmail,
+        });
+
+        setUserData((prevData) => ({
+          ...prevData,
+          fullName: editedFullName,
+          contactNumber: editedContactNumber,
+          email: editedEmail,
+        }));
+
+        Alert.alert('Profile Updated', 'Your profile has been successfully updated.');
+        setEditModalVisible(false);
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Alert.alert('Update Failed', 'An error occurred while updating your profile.');
     }
   };
 
@@ -98,13 +148,31 @@ export default function UserProfile() {
         </View>
 
         <View style={styles.categoryTextContainer}>
-          <Icon name="credit-card" style={styles.icon} />
-          <Text style={styles.categoryText}>Valid Until</Text>
-          <TouchableOpacity style={styles.arrowButton} onPress={() => handleArrowPress('Your valid date is until December 14, 2024.')}>
+          <Icon name="phone" style={styles.icon} />
+          <Text style={styles.categoryText}>Car Information</Text>
+          <TouchableOpacity 
+            style={styles.arrowButton} 
+            onPress={() => handleArrowPress2(userData?.vehicleType, userData?.vehicleColor, userData?.plateNumber)}>
             <Icon name="arrow-forward" style={styles.icon} />
           </TouchableOpacity>
         </View>
         <View style={styles.separator} />
+
+        <View style={styles.categoryTextContainer}>
+          <Icon name="phone" style={styles.icon} />
+          <Text style={styles.categoryText}>Valid Until</Text>
+          <TouchableOpacity 
+            style={styles.arrowButton} 
+            onPress={() => handleArrowPress(
+              'Account Valid Until: May 30, 2025', 
+              'Your parking account is active and valid until the date specified above. Please renew your account before the expiration date to continue the access to our parking services.'
+            )}
+          >
+            <Icon name="arrow-forward" style={styles.icon} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.separator} />
+
 
         <View style={styles.categoryTextContainer}>
           <Icon name="notifications" style={styles.icon} />
@@ -116,31 +184,57 @@ export default function UserProfile() {
         <View style={styles.separator} />
 
         <View style={styles.categoryTextContainer}>
-          <Icon name="phone" style={styles.icon} />
-          <Text style={styles.categoryText}>Contact Number</Text>
-          <TouchableOpacity style={styles.arrowButton} onPress={() => handleArrowPress(userData?.contactNumber)}>
+          <Icon name="edit" style={styles.icon} />
+          <Text style={styles.categoryText}>Edit Profile</Text>
+          <TouchableOpacity 
+            style={styles.arrowButton} 
+            onPress={handleEditProfile}>
             <Icon name="arrow-forward" style={styles.icon} />
           </TouchableOpacity>
         </View>
         <View style={styles.separator} />
 
-        <View style={styles.categoryTextContainer}>
-          <Icon name="lock" style={styles.icon} />
-          <Text style={styles.categoryText}>Privacy Policy</Text>
-          <TouchableOpacity style={styles.arrowButton} onPress={() => handleArrowPress('Privacy policy details.')}>
-            <Icon name="arrow-forward" style={styles.icon} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.separator} />
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isEditModalVisible}
+          onRequestClose={() => setEditModalVisible(false)}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Edit Profile</Text>
 
-        <View style={styles.categoryTextContainer}>
-          <Icon name="person-add" style={styles.icon} />
-          <Text style={styles.categoryText}>Invite Friends</Text>
-          <TouchableOpacity style={styles.arrowButton} onPress={() => handleArrowPress('Invite your friends!')}>
-            <Icon name="arrow-forward" style={styles.icon} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.separator} />
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                value={editedFullName}
+                onChangeText={setEditedFullName}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Contact Number"
+                value={editedContactNumber}
+                onChangeText={setEditedContactNumber}
+                keyboardType="phone-pad"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                value={editedEmail}
+                onChangeText={setEditedEmail}
+                keyboardType="email-address"
+              />
+
+              <View style={styles.modalButtons}>
+                <Pressable style={styles.button} onPress={() => setEditModalVisible(false)}>
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </Pressable>
+                <Pressable style={styles.button} onPress={handleSaveProfile}>
+                  <Text style={styles.buttonText}>Save</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         <View style={styles.logOutTextContainer}>
           <Icon name="exit-to-app" style={styles.icon2} />
@@ -149,22 +243,6 @@ export default function UserProfile() {
             <Icon name="arrow-forward" style={styles.icon2} />
           </TouchableOpacity>
         </View>
-
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={closeModal}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalView}>
-              <Text style={styles.modalText}>{modalText}</Text>
-              <Pressable style={styles.button} onPress={closeModal}>
-                <Text style={styles.buttonText}>Close</Text>
-              </Pressable>
-            </View>
-          </View>
-        </Modal>
       </View>
     </ImageBackground>
   );
@@ -254,26 +332,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalView: {
+  modalContent: {
     width: '80%',
-    padding: 20,
     backgroundColor: 'white',
     borderRadius: 10,
+    padding: 20,
     alignItems: 'center',
   },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
-  button: {
-    backgroundColor: '#2196F3',
+  input: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
-    elevation: 2,
+    marginBottom: 10,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  button: {
+    flex: 1,
+    marginHorizontal: 5,
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: '#007BFF',
+    alignItems: 'center',
   },
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
-    textAlign: 'center',
   },
 });

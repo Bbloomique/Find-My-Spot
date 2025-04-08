@@ -117,11 +117,6 @@ export default function Notification() {
     }
   };
 
-  const getDateLabel = (date) => {
-    const today = new Date().toDateString();
-    return date === today ? 'Today' : date;
-  };
-
   return (
     <ImageBackground source={require('../assets/images/gradientBG.png')} style={styles.background}>
       <View style={styles.container}>
@@ -130,13 +125,13 @@ export default function Notification() {
           <ScrollView style={styles.scrollContainer}>
             {Object.keys(groupedNotifications).map((date) => (
               <View key={date}>
-                <Text style={styles.dateText}>{getDateLabel(date)}</Text>
                 {groupedNotifications[date].map((notification) => (
                   <TouchableOpacity
                     key={notification.id}
                     onLongPress={() => confirmDeleteNotification(notification.id, notification.timeOut)}
                     style={styles.notificationContainer}>
                     <Text style={styles.notificationTitle}>{notification.title}</Text>
+                    <Text style={styles.notificationTime}>{notification.date}</Text>
                     <Text style={styles.notificationTime}>{notification.timeIn}</Text>
                     <Text style={styles.notificationMessage}>{notification.message}</Text>
                   </TouchableOpacity>
@@ -150,6 +145,7 @@ export default function Notification() {
                 onLongPress={() => confirmDeleteNotification(notification.id, notification.timeOut)}
                 style={styles.notificationContainer}>
                 <Text style={styles.notificationTitle}>{notification.title2}</Text>
+                <Text style={styles.notificationTime}>{notification.dateOut}</Text>
                 <Text style={styles.notificationTime}>{notification.timeOut}</Text>
                 <Text style={styles.notificationMessage}>{notification.message2}</Text>
               </TouchableOpacity>
@@ -176,17 +172,19 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1, 
     alignItems: 'center', 
-    padding: 10 
+    padding: 10,
+    paddingTop: 15, 
   },
   dateText: { 
     fontSize: 20, 
     fontWeight: 'bold', 
     color: 'white', 
-    marginBottom: 10 
+    marginBottom: 15 
   },
   scrollContainer: { 
     flex: 1, 
-    width: '95%' 
+    width: '95%',
+    marginBottom: 65
   },
   notificationContainer: {
     backgroundColor: 'white',
@@ -210,6 +208,8 @@ const styles = StyleSheet.create({
     color: 'grey' 
   },
   clearButtonContainer: { 
+    position: 'absolute', 
+    bottom: 10, 
     width: '100%', 
     alignItems: 'flex-end', 
     padding: 10 

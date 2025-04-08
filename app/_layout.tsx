@@ -69,6 +69,12 @@ export default function RootLayout() {
           headerTitle: "Profile",
           headerShown: true,
         }} />
+        <Stack.Screen 
+        name="help" 
+        options={{
+          headerTitle: "Help & Support",
+          headerShown: true,
+        }} />
     </Stack>
   );
 }

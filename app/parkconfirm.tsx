@@ -6,7 +6,6 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 
 export default function ParkConfirm() {
   const router = useRouter();
-  const { side = "Unknown" } = useLocalSearchParams(); // Ensure side has a default value
 
   const [userData, setUserData] = useState(null);
   const [isModalVisible, setModalVisible] = useState(true);
@@ -63,7 +62,7 @@ export default function ParkConfirm() {
       }
     };
     fetchUserData();
-  }, [side]);
+  }, []);
 
   const handleConfirmParking = async () => {
     const auth = getAuth();
@@ -84,7 +83,6 @@ export default function ParkConfirm() {
         await update(latestNotificationRef, {
           timeIn: currentTime,
           date: currentDate,
-          side: side,
           slotNo: "11", // papalitan pa this to 
         });
 
@@ -97,7 +95,6 @@ export default function ParkConfirm() {
       params: {
         showModal: "true",
         timeIn: currentTime,
-        side: side,
         slotNo: "11",
       },
     });
@@ -117,7 +114,7 @@ export default function ParkConfirm() {
               <Text style={styles.modalSubtext}>
                 {currentTime} | {currentDate}
               </Text>
-              <Text style={styles.modalSubtext}>{side ? `${side}, Slot No. 11` : "Slot No. 11"}</Text>
+              <Text style={styles.modalSubtext}>{/*side ? `${side}, Slot No. 11` : "Slot No. 11"*/} Slot No. 11</Text>
 
               <TouchableOpacity style={styles.minButton} onPress={handleConfirmParking}>
                 <Text style={styles.leaveButtonText}>Confirm Parking</Text>

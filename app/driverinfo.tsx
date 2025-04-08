@@ -53,12 +53,12 @@ export default function DriverInfo() {
       Alert.alert('Camera permission is required to use this feature.');
       return;
     }
-
+  
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaType.IMAGE, // Updated to use the new API
       quality: 1,
     });
-
+  
     if (!result.canceled && result.assets.length > 0) {
       setUserImage({ uri: result.assets[0].uri });
     }

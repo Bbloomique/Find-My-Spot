@@ -33,28 +33,32 @@ export default function ParkReceipt() {
   }, []);
 
   useEffect(() => {
-      const fetchNotifications = async () => {
-        const auth = getAuth();
-        const user = auth.currentUser;
-  
-        if (user) {
-          const db = getDatabase();
-          const notificationsRef = ref(db, `notifications/${user.uid}`);
-          const snapshot = await get(notificationsRef);
-  
-          if (snapshot.exists()) {
-            const data = snapshot.val();
-            const formattedNotifications = Object.keys(data).map((key) => ({
-              id: key,
-              ...data[key],
-            }));
-            setNotifications(formattedNotifications);
-          }
+    const fetchNotifications = async () => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (user) {
+        const db = getDatabase();
+        const notificationsRef = ref(db, `notifications/${user.uid}`);
+        const snapshot = await get(notificationsRef);
+
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const formattedNotifications = Object.keys(data).map((key) => ({
+            id: key,
+            ...data[key],
+          }));
+
+          // Sort notifications by timestamp (assuming a `timestamp` field exists)
+          formattedNotifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+          setNotifications(formattedNotifications);
         }
-      };
-  
-      fetchNotifications();
-    }, []);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
@@ -131,7 +135,7 @@ export default function ParkReceipt() {
           <View style={styles.infoTextContainer}>
             <Text style={styles.infoText}>{userData?.plateNumber}</Text>
             <Text style={styles.infoText}>{userData?.vehicleType}</Text>
-            <Text style={styles.infoText2}>{notifications[0]?.slotInfo || 'N/A'}</Text>
+            <Text style={styles.infoText2}>Slot No. {notifications[0]?.slotNo || 'N/A'}</Text>
           </View>
         </View>
 
@@ -141,10 +145,11 @@ export default function ParkReceipt() {
           <View style={styles.logContent}>
             <View style={styles.logItem}>
               <Text style={styles.logText}>Log In: {notifications[0]?.timeIn || 'N/A'}</Text>
+              <Text style={styles.dateText}>{notifications[0]?.date || 'N/A'}</Text>
             </View>
             <View style={styles.logItem}>
               <Text style={styles.logText}>Log Out: {notifications[0]?.timeOut || 'N/A'}</Text>
-              <Text style={styles.dateText}>{notifications[0]?.date || 'N/A'}</Text>
+              <Text style={styles.dateText}>{notifications[0]?.dateOut || 'N/A'}</Text>
             </View>
           </View>
         </View>

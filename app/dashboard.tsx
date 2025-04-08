@@ -4,16 +4,19 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { getDatabase, ref, get, set, update } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 import { useRouter, useLocalSearchParams } from "expo-router";
+import MapView, { Marker } from 'react-native-maps';
+import * as Location from 'expo-location';
 
 export default function Dashboard() {
   const router = useRouter();
-  const { showModal, timeIn, side, slotNo } = useLocalSearchParams();
+  const { showModal, timeIn, slotNo } = useLocalSearchParams();
   const [selectedTab, setSelectedTab] = useState("Home");
   const [userData, setUserData] = useState(null);
-  const [parkingData, setParkingData] = useState({ timeIn: '--', side: '--', slotNo: '--' });
+  const [parkingData, setParkingData] = useState({ timeIn: '--', slotNo: '--' });
   const [isParked, setIsParked] = useState(false);
   const [currentTime, setCurrentTime] = useState("");
   const [currentDate, setCurrentDate] = useState("");
+  const [location, setLocation] = useState(null);
   
   useEffect(() => {
     const fetchUserData = async () => {
@@ -51,14 +54,12 @@ export default function Dashboard() {
         if (!latestNotification.timeOut) {
           setParkingData({
             timeIn: latestNotification.timeIn || '--',
-            side: latestNotification.side || '--',
             slotNo: latestNotification.slotNo || '--'
           });
           setIsParked(true);
         } else if (latestNotification.date === today) {
           setParkingData({
             timeIn: latestNotification.timeIn || '--',
-            side: latestNotification.side || '--',
             slotNo: latestNotification.slotNo || '--'
           });
           setIsParked(true);
@@ -74,19 +75,37 @@ export default function Dashboard() {
     if (showModal === "true") {
       setParkingData({
         timeIn: timeIn,
-        side: side,
         slotNo: slotNo,
       });
       setIsParked(true); // User has confirmed parking
     } else if (showModal === "false") {
       setParkingData({
         timeIn: '--',
-        side: '--',
         slotNo: '--'
       });
       setIsParked(false); // User has left parking
-}
-  }, [showModal, timeIn, side, slotNo]);
+    }
+  }, [showModal, timeIn, slotNo]);
+
+  useEffect(() => {
+    const fetchLocation = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.error('Permission to access location was denied');
+        return;
+      }
+
+      let currentLocation = await Location.getCurrentPositionAsync({});
+      setLocation({
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    };
+
+    fetchLocation();
+  }, []);
 
   const handleNavigation = (tab) => {
     setSelectedTab(tab);
@@ -166,7 +185,20 @@ export default function Dashboard() {
         </View>
 
         {/* Map Section */}
-        <Image source={require('../assets/images/mapp.png')} style={styles.map} />
+        <View style={styles.mapContainer}>
+          {location ? (
+            <MapView
+              style={styles.map}
+              initialRegion={location}
+              showsUserLocation={true}
+              followsUserLocation={true}
+            >
+              <Marker coordinate={location} title="You are here" />
+            </MapView>
+          ) : (
+            <Text style={styles.loadingText}>Loading map...</Text>
+          )}
+        </View>
 
         {/* Parking Locations */}
         <View style={styles.parkingLocationContainer}>
@@ -178,16 +210,11 @@ export default function Dashboard() {
             </View>
           </View>
 
-          {/* Time Parked, Side, Slot No. Row */}
+          {/* Time Parked, Slot No. Row */}
           <View style={styles.infoRow}>
             <View style={styles.infoColumn}>
               <Text style={styles.infoLabel}>Time In:</Text>
               <Text style={styles.infoValue}>{parkingData.timeIn}</Text>
-            </View>
-
-            <View style={styles.infoColumn}>
-              <Text style={styles.infoLabel}>Side:</Text>
-              <Text style={styles.infoValue}>{parkingData.side}</Text>
             </View>
 
             <View style={styles.infoColumn}>
@@ -273,12 +300,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
   },
-  map: {
+  mapContainer: {
     width: '100%',
     height: '35%',
     marginVertical: '3%',
     borderWidth: 1,
-    borderColor: 'white'
+    borderColor: '#c3f0ec',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  map: {
+    flex: 1,
+  },
+  loadingText: {
+    textAlign: 'center',
+    marginTop: 20,
+    color: 'white',
+    fontSize: 16,
   },
   parkingLocationContainer: {
     backgroundColor: 'white',
