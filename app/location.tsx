@@ -7,7 +7,6 @@ import { getDatabase, ref, get } from "firebase/database";
 
 export default function Location() {
   const router = useRouter();
-  const [selectedTab, setSelectedTab] = useState("ParkLeft");
   const [userData, setUserData] = useState(null);
   const [currentTime, setCurrentTime] = useState("");
   const [currentDate, setCurrentDate] = useState("");
@@ -71,45 +70,23 @@ export default function Location() {
     fetchUserData();
   }, []);
 
-  const renderContent = () => {
-    const imageSource = selectedTab === "ParkLeft"
-      ? require("../assets/images/2.png")
-      : require("../assets/images/3.png");
-
-    const slotsLeft = selectedTab === "ParkLeft" ? 7 : 5;
-
-    return (
-      <View style={styles.mapContainer}>
-        <Image source={imageSource} style={styles.map} />
-        <View style={styles.bottomContainer}>
-          <View style={styles.slotsLeftContainer}>
-            <Text style={styles.slotText}>{slotsLeft}</Text>
-            <Text style={styles.statusText}>Slots Left</Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.reserveButton}
-            onPress={() => router.push(`/parkconfirm?side=${selectedTab === "ParkLeft" ? "Left Side" : "Right Side"}`)}
-          >
-            <Text style={styles.reserveButtonText}>Park Here</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  };
-
   return (
     <ImageBackground source={require("../assets/images/gradientBG.png")} style={styles.background}>
       <StatusBar style="light" />
-      <View style={styles.tabContainer}>
-        <TouchableOpacity onPress={() => setSelectedTab("ParkLeft")} style={styles.tab}>
-          <Text style={selectedTab === "ParkLeft" ? styles.activeTabText : styles.tabText}>Left Side</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setSelectedTab("ParkRight")} style={styles.tab}>
-          <Text style={selectedTab === "ParkRight" ? styles.activeTabText : styles.tabText}>Right Side</Text>
-        </TouchableOpacity>
+      <View style={styles.mapContainer}>
+        <Image source={require("../assets/images/2.png")} style={styles.map} />
+        <View style={styles.bottomContainer}>
+          <View style={styles.slotsLeftContainer}>
+            <Text style={styles.slotText}>{/*slotsLeft*/}</Text>
+            <Text style={styles.statusText}>Slots Left</Text>
+          </View>
+
+          <TouchableOpacity onPress={() => router.push(`/parkconfirm`)} style={styles.reserveButton} >
+            <Text style={styles.reserveButtonText}>Park Here</Text>
+          </TouchableOpacity>
+
+        </View>
       </View>
-      {renderContent()}
     </ImageBackground>
   );
 }
@@ -120,41 +97,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: "8%",
   },
-  tabContainer: {
-    flexDirection: "row",
-    backgroundColor: "#c3f0ec",
-    width: "70%",
-    borderRadius: 30,
-    marginBottom: 20,
-  },
-  tab: {
-    flex: 1,
-    alignItems: "center",
-    padding: 10,
-  },
-  tabText: {
-    color: "#1b2c46",
-    borderRadius: 30,
-    padding: 5,
-  },
-  activeTabText: {
-    color: "#c3f0ec",
-    fontWeight: "bold",
-    backgroundColor: "#1f3c53",
-    borderRadius: 30,
-    paddingHorizontal: "20%",
-    paddingVertical: "5%",
-    fontSize: 15,
-  },
   mapContainer: {
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
-    marginBottom: 30,
   },
   map: {
     width: "90%",
-    height: "80%",
+    height: "85%",
     borderWidth: 1,
     borderColor: "white",
   },
