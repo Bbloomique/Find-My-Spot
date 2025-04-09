@@ -48,19 +48,26 @@ export default function DriverInfo() {
   };
 
   const handlePressToolbarCamera = async () => {
-    const { granted } = await ImagePicker.requestCameraPermissionsAsync();
-    if (!granted) {
-      Alert.alert('Camera permission is required to use this feature.');
-      return;
-    }
+    try {
+      const { granted } = await ImagePicker.requestCameraPermissionsAsync();
+      if (!granted) {
+        Alert.alert('Permission Denied', 'Camera permission is required to use this feature.');
+        return;
+      }
   
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaType.IMAGE, // Updated to use the new API
-      quality: 1,
-    });
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, // Corrected mediaTypes
+        quality: 1,
+      });
   
-    if (!result.canceled && result.assets.length > 0) {
-      setUserImage({ uri: result.assets[0].uri });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setUserImage({ uri: result.assets[0].uri });
+      } else {
+        console.log('Camera operation was canceled or no image was captured.');
+      }
+    } catch (error) {
+      console.error('Error launching camera:', error);
+      Alert.alert('Error', 'An error occurred while accessing the camera.');
     }
   };
 

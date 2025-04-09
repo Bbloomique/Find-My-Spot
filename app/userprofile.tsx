@@ -148,7 +148,7 @@ export default function UserProfile() {
         </View>
 
         <View style={styles.categoryTextContainer}>
-          <Icon name="phone" style={styles.icon} />
+          <Icon name="directions-car" style={styles.icon} />
           <Text style={styles.categoryText}>Car Information</Text>
           <TouchableOpacity 
             style={styles.arrowButton} 
@@ -159,7 +159,7 @@ export default function UserProfile() {
         <View style={styles.separator} />
 
         <View style={styles.categoryTextContainer}>
-          <Icon name="phone" style={styles.icon} />
+          <Icon name="check-circle-outline" style={styles.icon} />
           <Text style={styles.categoryText}>Valid Until</Text>
           <TouchableOpacity 
             style={styles.arrowButton} 
@@ -265,9 +265,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   userImage: {
-    width: 150,
-    height: 150,
-    marginVertical: 20,
+    width: 180,
+    height: 180,
+    marginVertical: 15,
     borderRadius: 100,
     borderWidth: 1,
     borderColor: 'white',
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '80%',
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 2,
     padding: 20,
     alignItems: 'center',
   },
@@ -362,11 +362,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     padding: 10,
     borderRadius: 5,
-    backgroundColor: '#007BFF',
+
     alignItems: 'center',
   },
   buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: '#005a9c',
   },
 });

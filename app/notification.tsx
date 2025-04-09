@@ -121,34 +121,37 @@ export default function Notification() {
     <ImageBackground source={require('../assets/images/gradientBG.png')} style={styles.background}>
       <View style={styles.container}>
         <StatusBar barStyle="dark-content" />
+
+  {/* Notification container */}      
         {Object.keys(groupedNotifications).length > 0 ? (
           <ScrollView style={styles.scrollContainer}>
-            {Object.keys(groupedNotifications).map((date) => (
+            {Object.keys(groupedNotifications).reverse().map((date) => (
               <View key={date}>
-                {groupedNotifications[date].map((notification) => (
-                  <TouchableOpacity
-                    key={notification.id}
-                    onLongPress={() => confirmDeleteNotification(notification.id, notification.timeOut)}
-                    style={styles.notificationContainer}>
-                    <Text style={styles.notificationTitle}>{notification.title}</Text>
-                    <Text style={styles.notificationTime}>{notification.date}</Text>
-                    <Text style={styles.notificationTime}>{notification.timeIn}</Text>
-                    <Text style={styles.notificationMessage}>{notification.message}</Text>
-                  </TouchableOpacity>
+                {groupedNotifications[date].slice().reverse().map((notification) => ( // it reverses the order of notifications (latest at top)
+                  <View key={notification.id}>
+          
+                    <TouchableOpacity
+                      onLongPress={() => confirmDeleteNotification(notification.id, notification.timeOut)}
+                      style={styles.notificationContainer}
+                    >
+                      {notification.title2 && <Text style={styles.notificationTitle}>{notification.title2}</Text>}
+                      {notification.dateOut && <Text style={styles.notificationTime}>{notification.dateOut}</Text>}
+                      {notification.timeOut && <Text style={styles.notificationTime}>{notification.timeOut}</Text>}
+                      {notification.message2 && <Text style={styles.notificationMessage}>{notification.message2}</Text>}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onLongPress={() => confirmDeleteNotification(notification.id, notification.timeOut)}
+                      style={styles.notificationContainer}
+                    >
+                      {notification.title && <Text style={styles.notificationTitle}>{notification.title}</Text>}
+                      {notification.date && <Text style={styles.notificationTime}>{notification.date}</Text>}
+                      {notification.timeIn && <Text style={styles.notificationTime}>{notification.timeIn}</Text>}
+                      {notification.message && <Text style={styles.notificationMessage}>{notification.message}</Text>}
+                    </TouchableOpacity>
+                  </View>
                 ))}
               </View>
-            ))}
-
-            {notifications.map((notification) => (
-              <TouchableOpacity
-                key={notification.id}
-                onLongPress={() => confirmDeleteNotification(notification.id, notification.timeOut)}
-                style={styles.notificationContainer}>
-                <Text style={styles.notificationTitle}>{notification.title2}</Text>
-                <Text style={styles.notificationTime}>{notification.dateOut}</Text>
-                <Text style={styles.notificationTime}>{notification.timeOut}</Text>
-                <Text style={styles.notificationMessage}>{notification.message2}</Text>
-              </TouchableOpacity>
             ))}
           </ScrollView>
         ) : (

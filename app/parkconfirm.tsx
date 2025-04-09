@@ -83,7 +83,7 @@ export default function ParkConfirm() {
         await update(latestNotificationRef, {
           timeIn: currentTime,
           date: currentDate,
-          slotNo: "11", // papalitan pa this to 
+          slotNo: "11", // papalitan pa or tatanggalin this
         });
 
         console.log("Parking session saved in Firebase.");
@@ -95,7 +95,7 @@ export default function ParkConfirm() {
       params: {
         showModal: "true",
         timeIn: currentTime,
-        slotNo: "11",
+        slotNo: "11", // papalitan pa or tatanggalin this
       },
     });
   };

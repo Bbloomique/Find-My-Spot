@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, StatusBar, ImageBackground, Image, TextInput, Modal, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, ImageBackground, Image, TextInput, TouchableOpacity, Animated, Alert } from 'react-native';
 import { getDatabase, ref, get, update } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 import { FontAwesome } from '@expo/vector-icons';
@@ -8,7 +8,7 @@ import { useRouter } from "expo-router";
 export default function ParkReceipt() {
   const router = useRouter();
   const [userData, setUserData] = useState(null);
-  const [rating, setRating] = useState(0);  // New state for star rating
+  const [rating, setRating] = useState(0);
   const animatedValues = useRef([...Array(5)].map(() => new Animated.Value(1))).current;
   const [notifications, setNotifications] = useState([]);
   
@@ -49,7 +49,6 @@ export default function ParkReceipt() {
             ...data[key],
           }));
 
-          // Sort notifications by timestamp (assuming a `timestamp` field exists)
           formattedNotifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
           setNotifications(formattedNotifications);
@@ -60,7 +59,6 @@ export default function ParkReceipt() {
     fetchNotifications();
   }, []);
 
-  const [isModalVisible, setModalVisible] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
 
   const handleSubmitReview = async () => {
@@ -97,7 +95,12 @@ export default function ParkReceipt() {
   
             await update(ref(db, `notifications/${user.uid}/${lastNotificationId}`), updateData);
             console.log('Feedback submitted successfully!');
-            setModalVisible(true);  // Show modal on success
+
+            Alert.alert(
+              'Thank you!',
+              'Your feedback has been submitted successfully.',
+              [{ text: "OK", onPress: () => router.replace('/dashboard') }]
+            );
           }
         }
       } catch (error) {
@@ -105,11 +108,6 @@ export default function ParkReceipt() {
       }
     }
   };  
-
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    router.push('/dashboard');
-  };
 
   // Handle star press animation and rating
   const handlePress = (index) => {
@@ -126,7 +124,7 @@ export default function ParkReceipt() {
       <View style={styles.container}>
         <StatusBar barStyle="dark-content" />
 
-        {/* Information Section */}
+  {/* Information Section */}
         <View style={styles.infoContainer}>
           <Image
             source={userData?.profileImage ? { uri: userData.profileImage } : require('../assets/images/defaultPFP.jpg')}
@@ -139,7 +137,7 @@ export default function ParkReceipt() {
           </View>
         </View>
 
-        {/* Log Activities Section */}
+  {/* Log Activities Section */}
         <View style={styles.logContainer}>
           <Text style={styles.logTitle}>Log Activities</Text>
           <View style={styles.logContent}>
@@ -154,7 +152,7 @@ export default function ParkReceipt() {
           </View>
         </View>
 
-        {/* Tell Us Your Experience Section */}
+  {/* Tell Us Your Experience Section */}
         <View style={styles.experienceContainer}>
           <Text style={styles.experienceTitle}>Tell Us Your Experience</Text>
           <TextInput
@@ -167,7 +165,7 @@ export default function ParkReceipt() {
           />
         </View>
 
-        {/* Interactive Star Rating Section */}
+  {/* Star Rating Section */}
         <View style={styles.starsContainer}>
           <Text style={styles.experienceTitle}>Rate Your Experience</Text>
           <View style={styles.rating}>
@@ -188,27 +186,11 @@ export default function ParkReceipt() {
           </View>
         </View>
 
-        {/* Submit Review Button */}
+    {/* Submit Review Button */}
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmitReview}>
           <Text style={styles.submitButtonText}>Submit Review</Text>
         </TouchableOpacity>
 
-        {/* Modal for Thank You Message */}
-        <Modal
-          visible={isModalVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={handleCloseModal}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalText}>Thank You for Your Feedback!</Text>
-              <TouchableOpacity style={styles.closeButton} onPress={handleCloseModal}>
-                <Text style={styles.closeButtonText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
       </View>
     </ImageBackground>
   );

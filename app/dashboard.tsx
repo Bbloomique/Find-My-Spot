@@ -10,7 +10,7 @@ import * as Location from 'expo-location';
 export default function Dashboard() {
   const router = useRouter();
   const { showModal, timeIn, slotNo } = useLocalSearchParams();
-  const [selectedTab, setSelectedTab] = useState("Home");
+  const [selectedTab, setSelectedTab] = useState("null");
   const [userData, setUserData] = useState(null);
   const [parkingData, setParkingData] = useState({ timeIn: '--', slotNo: '--' });
   const [isParked, setIsParked] = useState(false);
@@ -97,8 +97,8 @@ export default function Dashboard() {
 
       let currentLocation = await Location.getCurrentPositionAsync({});
       setLocation({
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
+        latitude: 14.6089,
+        longitude: 121.0535,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       });
@@ -109,7 +109,7 @@ export default function Dashboard() {
 
   const handleNavigation = (tab) => {
     setSelectedTab(tab);
-    if (tab === "Home") router.push('/dashboard');
+    if (tab === "Help") router.push('/help');
     if (tab === "Location") router.push('/location');
     if (tab === "Notification") router.push('/notification');
     if (tab === "Profile") router.push('/userprofile');
@@ -147,17 +147,13 @@ export default function Dashboard() {
       setCurrentDate(newDate);
   
       if (latestNotificationKey) {
-        // Reference the latest notification
         const latestNotificationRef = ref(db, `notifications/${user.uid}/${latestNotificationKey}`);
   
-        // Get the current timestamp
         const timeOut = newTime;
         const dateOut = newDate;
   
-        // Update Firebase with both timeOut and dateOut
         await update(latestNotificationRef, { timeOut, dateOut });
   
-        // Navigate to the receipt page
         router.push('/parkreceipt');
       }
     }
@@ -168,7 +164,7 @@ export default function Dashboard() {
       <View style={styles.container}>
         <StatusBar barStyle="light-content" />
 
-        {/* User Info */}
+  {/* User Info */}
         <View style={styles.userInfo}>
           <Image
             source={userData?.profileImage ? { uri: userData.profileImage } : require('../assets/images/defaultPFP.jpg')}
@@ -184,7 +180,7 @@ export default function Dashboard() {
           <Text style={styles.QText}>Do you need a parking space for your car?</Text>
         </View>
 
-        {/* Map Section */}
+  {/* Map Section */}
         <View style={styles.mapContainer}>
           {location ? (
             <MapView
@@ -193,14 +189,14 @@ export default function Dashboard() {
               showsUserLocation={true}
               followsUserLocation={true}
             >
-              <Marker coordinate={location} title="You are here" />
+              <Marker coordinate={location} />
             </MapView>
           ) : (
             <Text style={styles.loadingText}>Loading map...</Text>
           )}
         </View>
 
-        {/* Parking Locations */}
+  {/* Parking Locations */}
         <View style={styles.parkingLocationContainer}>
           <View style={styles.parkingDetailsRow}>
             <Icon name="local-parking" style={styles.icon2} />
@@ -210,7 +206,7 @@ export default function Dashboard() {
             </View>
           </View>
 
-          {/* Time Parked, Slot No. Row */}
+  {/* Time Parked, Slot No. Row */}
           <View style={styles.infoRow}>
             <View style={styles.infoColumn}>
               <Text style={styles.infoLabel}>Time In:</Text>
@@ -223,7 +219,7 @@ export default function Dashboard() {
             </View>
           </View>
 
-           {/* "Leave Parking" Button */}
+  {/* "Leave Parking" Button */}
            {isParked && (
              <TouchableOpacity style={styles.moreButton} onPress={handleLeave}>
                <Text style={styles.moreText}>Leave Parking</Text>
@@ -231,12 +227,8 @@ export default function Dashboard() {
            )}
         </View>
 
-        {/* Bottom Navigation Tabs */}
+  {/* Bottom Navigation Tabs */}
         <View style={styles.tabContainer}>
-          <TouchableOpacity style={[styles.button, selectedTab === "Home" && styles.activeButton]} onPress={() => handleNavigation("Home")}>
-            <Icon name="home" style={selectedTab === "Home" ? styles.activeTabIcon : styles.tabIcon} />
-            <Text style={selectedTab === "Home" ? styles.activeTabText : styles.tabText}>Home</Text>
-          </TouchableOpacity>
 
           <TouchableOpacity style={[styles.button, selectedTab === "Location" && styles.activeButton]} onPress={() => handleNavigation("Location")}>
             <Icon name="location-on" style={selectedTab === "Location" ? styles.activeTabIcon : styles.tabIcon} />
@@ -246,6 +238,11 @@ export default function Dashboard() {
           <TouchableOpacity style={[styles.button, selectedTab === "Notification" && styles.activeButton]} onPress={() => handleNavigation("Notification")}>
             <Icon name="notifications" style={selectedTab === "Notification" ? styles.activeTabIcon : styles.tabIcon} />
             <Text style={selectedTab === "Notification" ? styles.activeTabText : styles.tabText}>Notification</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.button, selectedTab === "Help" && styles.activeButton]} onPress={() => handleNavigation("Help")}>
+            <Icon name="help" style={selectedTab === "Help" ? styles.activeTabIcon : styles.tabIcon} />
+            <Text style={selectedTab === "Help" ? styles.activeTabText : styles.tabText}>Help</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.button, selectedTab === "Profile" && styles.activeButton]} onPress={() => handleNavigation("Profile")}>

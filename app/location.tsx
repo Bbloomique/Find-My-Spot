@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { getAuth } from "firebase/auth";
 import { getDatabase, ref, get } from "firebase/database";
+import { WebView } from "react-native-webview";
 
 export default function Location() {
   const router = useRouter();
@@ -74,7 +75,12 @@ export default function Location() {
     <ImageBackground source={require("../assets/images/gradientBG.png")} style={styles.background}>
       <StatusBar style="light" />
       <View style={styles.mapContainer}>
-        <Image source={require("../assets/images/2.png")} style={styles.map} />
+        <View style={styles.map}>
+          <WebView
+            source={{ uri: 'https://github.com/Bbloomique/Find-My-Spot/blob/main/app/dashboard.tsx' }} // replace with the host web of the segmentation
+            style={{ flex: 1 }}
+          />
+        </View>
         <View style={styles.bottomContainer}>
           <View style={styles.slotsLeftContainer}>
             <Text style={styles.slotText}>{/*slotsLeft*/}</Text>
