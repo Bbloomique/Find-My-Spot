@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getDatabase } from 'firebase/database';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyD-DZK2HnEPLNT4UKtMvlmAX5rzNKcbebQ',
+  apiKey: '',
   authDomain: 'findmyspot-ecac4.firebaseapp.com',
   databaseURL: "https://findmyspot-ecac4-default-rtdb.asia-southeast1.firebasedatabase.app/",
   projectId: 'findmyspot-ecac4',
