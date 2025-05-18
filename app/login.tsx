@@ -15,7 +15,6 @@ export default function Login() {
   const [modalVisible, setModalVisible] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetMessage, setResetMessage] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
 
   const handleSignIn = async () => {
     try {
@@ -85,11 +84,7 @@ export default function Login() {
         </View>
 
         <View style={styles.rememberForgotContainer}>
-          <TouchableOpacity style={styles.rememberMe} onPress={() => setRememberMe(!rememberMe)}>
-            <View style={styles.checkbox}>{rememberMe && <Icon name="check" size={18} color="#fff" />}</View>
-            <Text style={styles.rememberMeText}>Remember Me?</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setModalVisible(true)}>
+          <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.forgotPasswordContainer}>
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>
@@ -183,35 +178,19 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#fff"
   },
-  forgotPasswordText: {
-    color: 'white',
-    marginRight: 20,
-    marginTop: 15,
-  },
   rememberForgotContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     width: '95%',
     marginBottom: 20,
   },
-  rememberMe: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginVertical: 15,
+  forgotPasswordContainer: {
+    alignSelf: 'flex-end',
+    marginRight: 25,
   },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: '#3accdb',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 5,
-  },
-  rememberMeText: {
+  forgotPasswordText: {
     color: 'white',
+    marginTop: 30,
   },
   signInButton: {
     width: '95%',

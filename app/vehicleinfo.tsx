@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ImageBackground, StatusBar, Image, TouchableOpa
 import { useRouter } from "expo-router";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { getAuth } from 'firebase/auth';
-import { getDatabase, ref, update } from 'firebase/database';
+import { getDatabase, ref, update, get } from 'firebase/database';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -18,12 +18,8 @@ export default function Dashboard() {
     { name: 'White', colorCode: '#FFFFFF' },
     { name: 'Blue', colorCode: '#3B82F6' },
     { name: 'Red', colorCode: '#EF4444' },
-    { name: 'Green', colorCode: '#10B981' },
-    { name: 'Yellow', colorCode: '#FACC15' },
-    { name: 'Orange', colorCode: '#FFA500' },
     { name: 'Grey', colorCode: '#808080' },
     { name: 'Silver', colorCode: '#C0C0C0' },
-    { name: 'Beige', colorCode: '#F5F5DC' },
   ];
 
   const types = ['Sedan', 'Coupes', 'Pickup', 'Van', 'SUV'];
@@ -38,13 +34,39 @@ export default function Dashboard() {
   };
 
   const handleContinue = async () => {
-    const auth = getAuth();
-    const user = auth.currentUser;
+  const auth = getAuth();
+  const user = auth.currentUser;
 
-    if (user) {
-      const uid = user.uid;
-      const db = getDatabase();
-      const vehicleRef = ref(db, `users/${uid}`);
+  if (!plateNumber || selectedType === 'Select your vehicle type' || !selectedColor) {
+    Alert.alert('Error', 'Please fill out all fields.');
+    return;
+  }
+
+  if (user) {
+    const uid = user.uid;
+    const db = getDatabase();
+    const userRef = ref(db, `users/${uid}`);
+    const allUsersRef = ref(db, 'users');
+
+    try {
+      const snapshot = await get(allUsersRef);
+      let plateExists = false;
+
+      if (snapshot.exists()) {
+        snapshot.forEach(childSnapshot => {
+          const data = childSnapshot.val();
+          if (
+            data.plateNumber?.toLowerCase() === plateNumber.toLowerCase() &&
+            childSnapshot.key !== uid
+          ) {
+            plateExists = true;
+          }
+        });
+      }
+
+      if (plateExists) {
+        throw { code: 'custom/plate-already-in-use' };
+      }
 
       const vehicleData = {
         vehicleType: selectedType,
@@ -52,18 +74,27 @@ export default function Dashboard() {
         plateNumber: plateNumber,
       };
 
-      try {
-        await update(vehicleRef, vehicleData);
-        Alert.alert('Success', 'Vehicle information has been saved.');
-        router.push('/dashboard');
-      } catch (error) {
-        console.error('Error saving vehicle data:', error);
-        Alert.alert('Error', 'Failed to save data. Please try again.');
+      await update(userRef, vehicleData);
+      Alert.alert('Success', 'Vehicle information has been saved.');
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Error saving vehicle data:', error);
+
+      switch (error.code) {
+        case 'custom/plate-already-in-use':
+          Alert.alert('Error', 'License plate is already registered.');
+          break;
+        default:
+          Alert.alert('Error', 'Failed to save data. Please try again.');
+          break;
       }
-    } else {
-      console.error('User not logged in');
     }
-  };
+  } else {
+    console.error('User not logged in');
+    Alert.alert('Error', 'You must be logged in to continue.');
+  }
+};
+
 
   return (
     <ImageBackground source={require('../assets/images/gradientBG.png')} style={styles.background}>
@@ -244,7 +275,7 @@ const styles = StyleSheet.create({
       justifyContent: 'space-between',
     },
     checkbox: {
-      width: 25,
+      width: 40,
       height: 40,
       borderRadius: 10,
       borderWidth: 2,

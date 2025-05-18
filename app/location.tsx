@@ -1,98 +1,162 @@
 import React, { useState, useEffect } from "react";
-import { Text, View, StyleSheet, ImageBackground, TouchableOpacity, Image, Alert } from "react-native";
-import { useRouter } from "expo-router";
+import { Text, View, StyleSheet, ImageBackground, TouchableOpacity, Alert, Dimensions, Animated } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { getAuth } from "firebase/auth";
-import { getDatabase, ref, get } from "firebase/database";
 import { WebView } from "react-native-webview";
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function Location() {
-  const router = useRouter();
-  const [userData, setUserData] = useState(null);
-  const [currentTime, setCurrentTime] = useState("");
-  const [currentDate, setCurrentDate] = useState("");
+  const { width } = Dimensions.get("window");
+  const screenWidth = width - 30;
+  const height = (screenWidth * 9) / 16;
+
+  const [parkingStatus, setParkingStatus] = useState({
+    parked_cars: 0,
+    available_spaces: 0,
+  });
+
+  const [isReserved, setIsReserved] = useState(false); 
+
+  const scaleAnim = useState(new Animated.Value(1))[0]; 
+  const rotateAnim = useState(new Animated.Value(0))[0]; 
+  const translateAnim = useState(new Animated.Value(0))[0]; 
+  const opacityAnim = useState(new Animated.Value(0))[0]; 
+  const boxAnim = useState(new Animated.Value(0))[0]; 
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const auth = getAuth();
-      const user = auth.currentUser;
-
-      if (user) {
-        const db = getDatabase();
-        const userRef = ref(db, `users/${user.uid}`);
-        const snapshot = await get(userRef);
-
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          setUserData(data);
-
-          // Generate time and date
-          const newTime = new Date().toLocaleString("en-PH", {
-            timeZone: "Asia/Manila",
-            hour: "numeric",
-            minute: "numeric",
-            hour12: true,
-          });
-          const newDate = new Date().toLocaleDateString("en-PH", {
-            timeZone: "Asia/Manila",
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          });
-
-          setCurrentTime(newTime);
-          setCurrentDate(newDate);
-
-          // Check last notification timestamp
-          const notificationsRef = ref(db, `notifications/${user.uid}`);
-          const notificationsSnapshot = await get(notificationsRef);
-
-          if (notificationsSnapshot.exists()) {
-            const notifications = notificationsSnapshot.val();
-            const notificationKeys = Object.keys(notifications);
-            if (notificationKeys.length > 0) {
-              const latestNotificationKey = notificationKeys[notificationKeys.length - 1];
-              const latestNotification = notifications[latestNotificationKey];
-
-              if (!latestNotification.timeOut) {
-                Alert.alert(
-                  "Access Denied",
-                  "You cannot book a new parking slot until you decide to leave your current spot.",
-                  [{ text: "OK", onPress: () => router.replace('/dashboard') }]
-                );
-                return;
-              }
-            }
-          }
-        }
+    const fetchParkingStatus = async () => {
+      try {
+        const response = await fetch("https://assuring-informed-horse.ngrok-free.app/parking_status");
+        const data = await response.json();
+        setParkingStatus(data);
+      } catch (error) {
+        console.error("Error fetching parking status:", error);
       }
     };
 
-    fetchUserData();
+    const interval = setInterval(() => {
+      fetchParkingStatus();
+    }, 1000);
+
+    Animated.timing(opacityAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+
+    Animated.spring(boxAnim, {
+      toValue: 1,
+      friction: 4,
+      tension: 80,
+      useNativeDriver: true,
+    }).start();
+
+    return () => clearInterval(interval);
   }, []);
+
+  const handleReserve = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rotateAnim, {
+        toValue: 15, 
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateAnim, {
+        toValue: -5, 
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rotateAnim, {
+        toValue: 0, 
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateAnim, {
+        toValue: 0, 
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    if (!isReserved && parkingStatus.available_spaces > 0) {
+      const updatedStatus = {
+        ...parkingStatus,
+        available_spaces: parkingStatus.available_spaces - 1,
+      };
+      setParkingStatus(updatedStatus);
+      setIsReserved(true); 
+    } else if (isReserved) {
+      const updatedStatus = {
+        ...parkingStatus,
+        available_spaces: parkingStatus.available_spaces + 1,
+      };
+      setParkingStatus(updatedStatus);
+      setIsReserved(false); 
+    } else {
+      Alert.alert("No available spaces to reserve!");
+    }
+  };
 
   return (
     <ImageBackground source={require("../assets/images/gradientBG.png")} style={styles.background}>
       <StatusBar style="light" />
+
+      {/* Header Section Above the Video Feed */}
+      <View style={styles.header}>
+        <MaterialCommunityIcons name="car" size={30} color="#fff" style={styles.headerIcon} />
+        <Text style={styles.headerTitle}>Find and Reserve Your Spot</Text>
+      </View>
+
       <View style={styles.mapContainer}>
-        <View style={styles.map}>
+        {/* Video Feed with Gradient Overlay */}
+        <View style={[styles.mapPlaceholder, { width: screenWidth, height }]}>
           <WebView
-            source={{ uri: 'https://github.com/Bbloomique/Find-My-Spot/blob/main/app/dashboard.tsx' }} // replace with the host web of the segmentation
-            style={{ flex: 1 }}
+            originWhitelist={['*']}
+            source={{ uri: "https://assuring-informed-horse.ngrok-free.app/video_feed" }}
+            style={styles.cameraFeed}
           />
         </View>
-        <View style={styles.bottomContainer}>
-          <View style={styles.slotsLeftContainer}>
-            <Text style={styles.slotText}>{/*slotsLeft*/}</Text>
-            <Text style={styles.statusText}>Slots Left</Text>
-          </View>
-
-          <TouchableOpacity onPress={() => router.push(`/parkconfirm`)} style={styles.reserveButton} >
-            <Text style={styles.reserveButtonText}>Park Here</Text>
-          </TouchableOpacity>
-
-        </View>
       </View>
+
+      {/* Animated Parked Cars and Available Spaces */}
+      <Animated.View
+        style={[styles.statusContainer, { opacity: opacityAnim, transform: [{ scale: boxAnim }] }]}>
+        {/* Animated Parked Cars Box */}
+        <Animated.View style={[styles.statusBox, { backgroundColor: "#1976D2" }]}>
+          <Text style={styles.statusBoxText}>Parked Cars</Text>
+          <Text style={styles.statusBoxCount}>{parkingStatus.parked_cars}</Text>
+        </Animated.View>
+
+        {/* Animated Available Spaces Box */}
+        <Animated.View style={[styles.statusBox, { backgroundColor: "#388E3C" }]}>
+          <Text style={styles.statusBoxText}>Available Spaces</Text>
+          <Text style={styles.statusBoxCount}>{parkingStatus.available_spaces}</Text>
+        </Animated.View>
+      </Animated.View>
+
+      {/* Reserve Button */}
+      <Animated.View
+        style={{
+          transform: [
+            { scale: scaleAnim },
+            { rotateY: rotateAnim.interpolate({ inputRange: [0, 15], outputRange: ["0deg", "15deg"] }) },
+            { translateY: translateAnim },
+          ],
+        }}
+      >
+        <TouchableOpacity onPress={handleReserve} style={[styles.reserveButton, { backgroundColor: isReserved ? "#D32F2F" : "#388E3C" }]}>
+          <Text style={styles.reserveButtonText}>{isReserved ? "Cancel Reservation" : "Reserve Spot"}</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </ImageBackground>
   );
 }
@@ -101,57 +165,105 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     alignItems: "center",
-    paddingTop: "8%",
+    justifyContent: "center",
+    paddingTop: "10%",
+    paddingHorizontal: 20,
+  },
+  header: {
+    width: "100%",
+    paddingVertical: 15,
+    backgroundColor: "#388E3C", 
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  headerIcon: {
+    marginBottom: 10,
+  },
+  headerTitle: {
+    fontSize: 24,
+    color: "#fff",
+    fontWeight: "bold",
+    textTransform: "uppercase",
   },
   mapContainer: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    marginTop: 20,
+    borderRadius: 15,
+    overflow: "hidden",
+    backgroundColor: "#00000090", 
+  },
+  mapPlaceholder: {
+    borderRadius: 15,
+    overflow: "hidden",
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  cameraFeed: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 15,
+  },
+  statusContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 20,
+    marginTop: 30,
+  },
+  statusBox: {
+    width: "45%",
+    borderRadius: 15,
+    padding: 20,
     justifyContent: "center",
     alignItems: "center",
-    width: "100%",
-  },
-  map: {
-    width: "90%",
-    height: "85%",
-    borderWidth: 1,
-    borderColor: "white",
-  },
-  bottomContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
     marginBottom: 20,
-    marginTop: 90,
   },
-  slotsLeftContainer: {
-    marginBottom: 20,
-    position: "absolute",
-    bottom: 20,
-    left: 20,
-    alignItems: "center",
+  statusBoxText: {
+    fontSize: 20,
+    color: "#fff",
+    fontWeight: "600",
   },
-  slotText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
-    top: 20,
-  },
-  statusText: {
-    fontSize: 18,
-    color: "white",
-    top: 15,
+  statusBoxCount: {
+    fontSize: 40,
+    color: "#fff",
+    fontWeight: "700",
   },
   reserveButton: {
-    position: "absolute",
-    bottom: 25,
-    right: 20,
-    backgroundColor: "#c3f0ec",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.5,
+    elevation: 5,
+    marginTop: 30,
   },
   reserveButtonText: {
-    color: "#1f3c53",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+    textTransform: "uppercase",
   },
 });
-

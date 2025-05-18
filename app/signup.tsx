@@ -16,28 +16,41 @@ export default function SignUp() {
   const [passwordError, setPasswordError] = useState('');
 
   const handleSignUp = async () => {
-    if (password !== confirmPassword) {
-      setPasswordError('Passwords do not match.');
-      return;
-    }
+  if (password !== confirmPassword) {
+    setPasswordError('Passwords do not match.');
+    return;
+  }
 
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      console.log('Success', 'Account created successfully!');
-      router.push('/driverinfo');
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-      setPasswordError('');
-    } catch (error) {
-      console.log('Error', error.message);
-      if (error.code === 'auth/password-does-not-meet-requirements') {
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    console.log('Success', 'Account created successfully!');
+    router.push('/driverinfo');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setPasswordError('');
+  } catch (error) {
+    console.log('Error', error.message);
+    switch (error.code) {
+      case 'auth/email-already-in-use':
+        setPasswordError('Email is already in use.\nTry signing in or use a different email.');
+        break;
+      case 'auth/invalid-email':
+        setPasswordError('The email address is not valid.');
+        break;
+      case 'auth/weak-password':
+        setPasswordError('Password must be at least 6 characters long.');
+        break;
+      // optional custom case for your own requirements
+      case 'auth/password-does-not-meet-requirements':
         setPasswordError('Password must contain:\n• At least 1 uppercase letter\n• At least 1 special character\n• At least 1 number\n• Minimum of 6 characters');
-      } else {
+        break;
+      default:
         setPasswordError(error.message);
-      }
+        break;
     }
-  };
+  }
+};
 
   const handleSignIn = () => {
     router.push('/login');
