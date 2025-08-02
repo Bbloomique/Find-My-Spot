@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "FMS3",
+    "name": "Find My Spot",
     "slug": "FMS3",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo.png",
+        "foregroundImage": "./assets/images/Iconn.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.qamapacinos.FMS3"

@@ -14,15 +14,15 @@ export default function Dashboard() {
   const [plateNumber, setPlateNumber] = useState('');
 
   const vehicleColors = [
-    { name: 'Black', colorCode: '#000000' },
-    { name: 'White', colorCode: '#FFFFFF' },
-    { name: 'Blue', colorCode: '#3B82F6' },
-    { name: 'Red', colorCode: '#EF4444' },
-    { name: 'Grey', colorCode: '#808080' },
-    { name: 'Silver', colorCode: '#C0C0C0' },
+    { name: 'black', colorCode: '#000000' },
+    { name: 'white', colorCode: '#FFFFFF' },
+    { name: 'blue', colorCode: '#3B82F6' },
+    { name: 'red', colorCode: '#EF4444' },
+    { name: 'grey', colorCode: '#808080' },
+    { name: 'silver', colorCode: '#C0C0C0' },
   ];
 
-  const types = ['Sedan', 'Coupes', 'Pickup', 'Van', 'SUV'];
+  const types = ['sedan', 'pickup', 'van', 'suv'];
 
   const handleTypeSelect = (type) => {
     setSelectedType(type);

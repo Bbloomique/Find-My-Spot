@@ -6,6 +6,7 @@ import { getAuth } from 'firebase/auth';
 export default function Notification() {
   const [notifications, setNotifications] = useState([]);
   const [groupedNotifications, setGroupedNotifications] = useState({});
+  const [expandedId, setExpandedId] = useState(null); // Track expanded notification
 
   // Fetch notifications from Firebase
   useEffect(() => {
@@ -25,9 +26,8 @@ export default function Notification() {
             ...data[key],
           }));
 
-          // Group notifications by date
           const grouped = formattedNotifications.reduce((acc, notification) => {
-            const date = new Date(notification.timeIn).toDateString();
+            const date = new Date(notification.reservedtime).toDateString();
             if (!acc[date]) acc[date] = [];
             acc[date].push(notification);
             return acc;
@@ -84,12 +84,7 @@ export default function Notification() {
   };
 
   // Show delete confirmation for individual notification
-  const confirmDeleteNotification = (id, timeOut) => {
-    if (!timeOut) {
-      Alert.alert('Cannot Delete', 'This notification cannot be deleted.');
-      return;
-    }
-
+  const confirmDeleteNotification = (id) => {
     Alert.alert(
       'Delete Notification',
       'Are you sure you want to delete this notification?',
@@ -127,29 +122,35 @@ export default function Notification() {
           <ScrollView style={styles.scrollContainer}>
             {Object.keys(groupedNotifications).reverse().map((date) => (
               <View key={date}>
-                {groupedNotifications[date].slice().reverse().map((notification) => ( // it reverses the order of notifications (latest at top)
-                  <View key={notification.id}>
-          
-                    <TouchableOpacity
-                      onLongPress={() => confirmDeleteNotification(notification.id, notification.timeOut)}
-                      style={styles.notificationContainer}
-                    >
-                      {notification.title2 && <Text style={styles.notificationTitle}>{notification.title2}</Text>}
-                      {notification.dateOut && <Text style={styles.notificationTime}>{notification.dateOut}</Text>}
-                      {notification.timeOut && <Text style={styles.notificationTime}>{notification.timeOut}</Text>}
-                      {notification.message2 && <Text style={styles.notificationMessage}>{notification.message2}</Text>}
-                    </TouchableOpacity>
+                {groupedNotifications[date].slice().reverse().map((notification) => (
+                  <TouchableOpacity
+                    key={notification.id}
+                    //onPress={() => setExpandedId(expandedId === notification.id ? null : notification.id)}
+                    onLongPress={() => confirmDeleteNotification(notification.id)}
+                    style={styles.notificationContainer}
+                  >
+                    {/* Main notification content */}
+                    {notification.title && <Text style={styles.notificationTitle}>{notification.title}</Text>}
+                    {notification.date && <Text style={styles.notificationTime}>{notification.date}</Text>}
+                    {notification.reservedtime && <Text style={styles.notificationTime}>{notification.reservedtime}</Text>}
+                    {notification.message && <Text style={styles.notificationMessage}>{notification.message}</Text>}
 
-                    <TouchableOpacity
-                      onLongPress={() => confirmDeleteNotification(notification.id, notification.timeOut)}
-                      style={styles.notificationContainer}
-                    >
-                      {notification.title && <Text style={styles.notificationTitle}>{notification.title}</Text>}
-                      {notification.date && <Text style={styles.notificationTime}>{notification.date}</Text>}
-                      {notification.timeIn && <Text style={styles.notificationTime}>{notification.timeIn}</Text>}
-                      {notification.message && <Text style={styles.notificationMessage}>{notification.message}</Text>}
-                    </TouchableOpacity>
-                  </View>
+                    {/* Expanded content */}
+                    {expandedId === notification.id && (
+                      <View style={{ marginTop: 10 }}>
+                        {notification.timestamp && (
+                          <Text style={styles.notificationTime}>Timestamp: {notification.timestamp}</Text>
+                        )}
+                        {notification.vehicleType && (
+                          <Text style={styles.notificationMessage}>Vehicle: {notification.vehicleType}</Text>
+                        )}
+                        {notification.plateNumber && (
+                          <Text style={styles.notificationMessage}>Plate: {notification.plateNumber}</Text>
+                        )}
+                        {/* Add more fields here if needed */}
+                      </View>
+                    )}
+                  </TouchableOpacity>
                 ))}
               </View>
             ))}

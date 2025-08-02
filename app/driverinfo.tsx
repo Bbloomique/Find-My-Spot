@@ -122,7 +122,7 @@ export default function DriverInfo() {
             <Icon name="person" style={styles.icon} />
             <TextInput
               style={styles.input}
-              placeholder="Enter Full Name"
+              placeholder="Enter Name"
               placeholderTextColor="#ccc"
               value={fullName}
               onChangeText={setFullName}

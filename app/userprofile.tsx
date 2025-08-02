@@ -1,17 +1,17 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ImageBackground, StatusBar, Image, TouchableOpacity, Modal, Pressable, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, StatusBar, Image, TouchableOpacity, Modal, Pressable, Alert, TextInput, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { getDatabase, ref, get, update } from 'firebase/database';
-import { getAuth, signOut } from 'firebase/auth';
+import { getDatabase, ref, get, update, remove } from 'firebase/database';
+import { getAuth, signOut, deleteUser } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function UserProfile() {
   const router = useRouter();
 
   const [userData, setUserData] = useState(null);
-  
+
   // Fetch user data from Firebase
   useEffect(() => {
     const fetchUserData = async () => {
@@ -32,8 +32,6 @@ export default function UserProfile() {
     fetchUserData();
   }, []);
 
-  const [userImage, setUserImage] = useState(require('../assets/images/user.png'));
-
   const handleImagePicker = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
@@ -44,11 +42,32 @@ export default function UserProfile() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 1,
+      base64: true,
     });
 
     if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      setUserImage({ uri });
+      const base64 = result.assets[0].base64;
+      const imageData = `data:image/jpeg;base64,${base64}`;
+
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (user) {
+          const db = getDatabase();
+          const userRef = ref(db, `users/${user.uid}`);
+          await update(userRef, { profileImage: imageData });
+
+          setUserData((prevData) => ({
+            ...prevData,
+            profileImage: imageData,
+          }));
+
+          Alert.alert("Profile Image Updated", "Your profile image has been updated.");
+        }
+      } catch (error) {
+        console.error("Image upload error:", error);
+        Alert.alert("Error", "Failed to upload image. Please try again.");
+      }
     }
   };
 
@@ -59,7 +78,7 @@ export default function UserProfile() {
       [{ text: 'OK' }],
       { cancelable: true }
     );
-  };  
+  };
 
   const handleArrowPress2 = (vehicleType, vehicleColor, plateNumber) => {
     Alert.alert(
@@ -84,6 +103,39 @@ export default function UserProfile() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to delete your account?\nThis action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const auth = getAuth();
+              const user = auth.currentUser;
+              if (user) {
+                const db = getDatabase();
+                const userRef = ref(db, `users/${user.uid}`);
+                await remove(userRef); // Remove user data from database
+                await deleteUser(user); // Delete user from Firebase Auth
+                await AsyncStorage.clear();
+                Alert.alert("Account Deleted", "Your account has been deleted.");
+                router.push("/");
+              }
+            } catch (error) {
+              console.error("Delete account error:", error);
+              Alert.alert("Error", "Failed to delete account. Please re-login and try again.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Profile Edit Modal State
   const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [editedFullName, setEditedFullName] = useState('');
   const [editedContactNumber, setEditedContactNumber] = useState('');
@@ -127,18 +179,66 @@ export default function UserProfile() {
     }
   };
 
+  // Vehicle Edit Modal State
+  const [isEditVehicleModalVisible, setEditVehicleModalVisible] = useState(false);
+  const [editedVehicleType, setEditedVehicleType] = useState('');
+  const [editedVehicleColor, setEditedVehicleColor] = useState('');
+  const [editedPlateNumber, setEditedPlateNumber] = useState('');
+
+  const handleEditVehicle = () => {
+    setEditedVehicleType(userData?.vehicleType || '');
+    setEditedVehicleColor(userData?.vehicleColor || '');
+    setEditedPlateNumber(userData?.plateNumber || '');
+    setEditVehicleModalVisible(true);
+  };
+
+  const handleSaveVehicle = async () => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (user) {
+        const db = getDatabase();
+        const userRef = ref(db, `users/${user.uid}`);
+
+        await update(userRef, {
+          vehicleType: editedVehicleType,
+          vehicleColor: editedVehicleColor,
+          plateNumber: editedPlateNumber,
+        });
+
+        setUserData((prevData) => ({
+          ...prevData,
+          vehicleType: editedVehicleType,
+          vehicleColor: editedVehicleColor,
+          plateNumber: editedPlateNumber,
+        }));
+
+        Alert.alert('Vehicle Information Updated', 'Your vehicle information has been successfully updated.');
+        setEditVehicleModalVisible(false);
+      }
+    } catch (error) {
+      console.error('Error updating vehicle information:', error);
+      Alert.alert('Update Failed', 'An error occurred while updating your vehicle information.');
+    }
+  };
+
   return (
     <ImageBackground
       source={require('../assets/images/gradientBG.png')}
       style={styles.background}>
-      <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.container}>
         <StatusBar barStyle="dark-content" />
 
         <View style={styles.userInfo}>
           <TouchableOpacity onPress={handleImagePicker}>
             <Image
-            source={userData?.profileImage ? { uri: userData.profileImage } : require('../assets/images/defaultPFP.jpg')}
-            style={styles.userImage}
+              source={
+                userData?.profileImage
+                  ? { uri: userData.profileImage }
+                  : require('../assets/images/defaultPFP.jpg')
+              }
+              style={styles.userImage}
             />
           </TouchableOpacity>
           <View style={styles.userTextContainer}>
@@ -147,53 +247,80 @@ export default function UserProfile() {
           </View>
         </View>
 
+        {/* Car Information */}
         <View style={styles.categoryTextContainer}>
           <Icon name="directions-car" style={styles.icon} />
           <Text style={styles.categoryText}>Car Information</Text>
-          <TouchableOpacity 
-            style={styles.arrowButton} 
+          <TouchableOpacity
+            style={styles.arrowButton}
             onPress={() => handleArrowPress2(userData?.vehicleType, userData?.vehicleColor, userData?.plateNumber)}>
             <Icon name="arrow-forward" style={styles.icon} />
           </TouchableOpacity>
         </View>
         <View style={styles.separator} />
 
+        {/* Add Vehicle */}
         <View style={styles.categoryTextContainer}>
-          <Icon name="check-circle-outline" style={styles.icon} />
-          <Text style={styles.categoryText}>Valid Until</Text>
-          <TouchableOpacity 
-            style={styles.arrowButton} 
-            onPress={() => handleArrowPress(
-              'Account Valid Until: May 30, 2025', 
-              'Your parking account is active and valid until the date specified above. Please renew your account before the expiration date to continue the access to our parking services.'
-            )}
+          <Icon name="add-circle-outline" style={styles.icon} />
+          <Text style={styles.categoryText}>Add Vehicle</Text>
+          <TouchableOpacity
+            style={styles.arrowButton}
+            onPress={() =>
+              Alert.alert(
+                "Add Vehicle",
+                "To add another vehicle registered in your account, \n\nplease contact the management at +63 999 999 9999 \n(see Help > Contact Information)\n\nor directly ask the parking admin."
+              )
+            }
           >
             <Icon name="arrow-forward" style={styles.icon} />
           </TouchableOpacity>
         </View>
         <View style={styles.separator} />
 
-
-        <View style={styles.categoryTextContainer}>
-          <Icon name="notifications" style={styles.icon} />
-          <Text style={styles.categoryText}>Notification</Text>
-          <TouchableOpacity style={styles.arrowButton} onPress={() => router.push('/notification')}>
-            <Icon name="arrow-forward" style={styles.icon} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.separator} />
-
+                {/* Edit Profile */}
         <View style={styles.categoryTextContainer}>
           <Icon name="edit" style={styles.icon} />
           <Text style={styles.categoryText}>Edit Profile</Text>
-          <TouchableOpacity 
-            style={styles.arrowButton} 
+          <TouchableOpacity
+            style={styles.arrowButton}
             onPress={handleEditProfile}>
             <Icon name="arrow-forward" style={styles.icon} />
           </TouchableOpacity>
         </View>
         <View style={styles.separator} />
 
+        {/* Help & Support */}
+        <View style={styles.categoryTextContainer}>
+          <Icon name="help" style={styles.icon} />
+          <Text style={styles.categoryText}>Help & Support</Text>
+          <TouchableOpacity
+            style={styles.arrowButton}
+            onPress={() => router.push('/help')}
+          >
+            <Icon name="arrow-forward" style={styles.icon} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.separator} />
+
+        {/* Delete Account */}
+        <View style={styles.categoryTextContainer}>
+          <Icon name="delete" style={styles.icon} />
+          <Text style={styles.categoryText}>Delete Account</Text>
+          <TouchableOpacity style={styles.arrowButton} onPress={handleDeleteAccount}>
+            <Icon name="arrow-forward" style={styles.icon} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Log Out */}
+        <View style={styles.logOutTextContainer}>
+          <Icon name="exit-to-app" style={styles.icon2} />
+          <Text style={styles.categoryText2}>Log Out</Text>
+          <TouchableOpacity style={styles.arrowButton} onPress={handleLogOut}>
+            <Icon name="arrow-forward" style={styles.icon2} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Edit Profile Modal */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -202,7 +329,6 @@ export default function UserProfile() {
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Edit Profile</Text>
-
               <TextInput
                 style={styles.input}
                 placeholder="Full Name"
@@ -223,7 +349,6 @@ export default function UserProfile() {
                 onChangeText={setEditedEmail}
                 keyboardType="email-address"
               />
-
               <View style={styles.modalButtons}>
                 <Pressable style={styles.button} onPress={() => setEditModalVisible(false)}>
                   <Text style={styles.buttonText}>Cancel</Text>
@@ -236,14 +361,45 @@ export default function UserProfile() {
           </View>
         </Modal>
 
-        <View style={styles.logOutTextContainer}>
-          <Icon name="exit-to-app" style={styles.icon2} />
-          <Text style={styles.categoryText2}>Log Out</Text>
-          <TouchableOpacity style={styles.arrowButton} onPress={handleLogOut}>
-            <Icon name="arrow-forward" style={styles.icon2} />
-          </TouchableOpacity>
-        </View>
-      </View>
+        {/* Edit Vehicle Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isEditVehicleModalVisible}
+          onRequestClose={() => setEditVehicleModalVisible(false)}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Edit Vehicle Information</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Vehicle Type"
+                value={editedVehicleType}
+                onChangeText={setEditedVehicleType}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Vehicle Color"
+                value={editedVehicleColor}
+                onChangeText={setEditedVehicleColor}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Plate Number"
+                value={editedPlateNumber}
+                onChangeText={setEditedPlateNumber}
+              />
+              <View style={styles.modalButtons}>
+                <Pressable style={styles.button} onPress={() => setEditVehicleModalVisible(false)}>
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </Pressable>
+                <Pressable style={styles.button} onPress={handleSaveVehicle}>
+                  <Text style={styles.buttonText}>Save</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </ScrollView>
     </ImageBackground>
   );
 };
@@ -257,33 +413,30 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 25,
-    paddingTop: 10,
   },
   userInfo: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 20,
+    width: '100%',
   },
   userImage: {
-    width: 180,
-    height: 180,
+    width: 160,
+    height: 160,
     marginVertical: 15,
     borderRadius: 100,
-    borderWidth: 1,
-    borderColor: 'white',
   },
   userTextContainer: {
     alignItems: 'center',
+    marginTop: 10,
   },
   nameText: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     color: 'white',
   },
   emailText: {
     fontSize: 14,
     color: 'white',
-    marginBottom: 10
   },
   categoryTextContainer: {
     paddingVertical: 18,
@@ -293,12 +446,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   categoryText: {
-    fontSize: 18,
+    fontSize: 16,
     color: 'white',
     marginLeft: 10,
   },
   categoryText2: {
-    fontSize: 18,
+    fontSize: 16,
     marginLeft: 10,
   },
   icon: {
@@ -324,25 +477,25 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     width: '100%',
     alignItems: 'center',
-    marginBottom: 30
+    marginBottom: 30,
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'center', 
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
     width: '80%',
     backgroundColor: 'white',
-    borderRadius: 2,
+    borderRadius: 2, 
     padding: 20,
     alignItems: 'center',
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontWeight: 'bold', 
+    marginBottom: 20, 
   },
   input: {
     width: '100%',
@@ -360,12 +513,13 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     marginHorizontal: 5,
-    padding: 10,
+    padding: 10, 
     borderRadius: 5,
-
+    backgroundColor: '#005a9c',
     alignItems: 'center',
   },
   buttonText: {
-    color: '#005a9c',
+    color: 'white',
+    fontWeight: 'bold',
   },
 });

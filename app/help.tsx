@@ -51,7 +51,7 @@ export default function Help() {
         <View style={styles.NContainer}>
           <TouchableOpacity style={styles.NavContainer} onPress={() => handleArrowPress(
                 'Frequently Asked Questions', 
-                '1. How do I see available slots?\n\t- Go to the location, number of available slots will be displayed, confirm parking if there is available slots.\n\n2. How can I cancel my booking?\n\t- Visit dashboard > More > Cancel.\n\n3. What happens if I arrive late?\n\t- Slots are first come first serve. Late arrivals may not find any slots left.\n\n4. How do I update my profile?\n\t- Go to Profile > Edit to update your details.\n\n5. What should I do if I encounter a problem?\n\t- Visit Dashboard > See Report a Problem > write us an email.\n\n6. Is my information safe?\n\t- Yes. See our Privacy Policy for details.\n\n7. Can I invite friends?\n\t- Yes! Go to Invite Friends to share the app.'
+                '1. How do I see available slots?\n\t- Go to the location, number of available slots will be displayed, confirm parking if there is available slots.\n\n2. How can I cancel my reservation?\n\t- Visit dashboard > Location > Cancel Reservation.\n\n3. How do I update my profile?\n\t- Go to Profile > Edit to update your details.\n\n4. What should I do if I encounter a problem?\n\t- Visit Dashboard > Profile > Help & Support > See Report a Problem > write us an email.\n\n5. Is my information safe?\n\t- Yes. See our Privacy Policy for details.\n\n6. Can I register another vehicle to my account?\n\t- Yes, you can register multiple vehicles under your account. Go to Profile > Add Vehicle > Follow the instructions.'
           )}>
             <Icon name="question-answer" style={styles.icon} />
             <Text style={styles.NavText}>FAQs</Text>
@@ -65,14 +65,14 @@ export default function Help() {
         <View style={styles.NContainer}>
           <TouchableOpacity style={styles.NavContainer} onPress={() => handleArrowPress(
               'Contact Information', 
-              'For any concerns, or inquiries, reach us at:\n\n📞\n+63 999 999 9999\n\n📧\nteam59parkingmanagement@gmail.com\n\n⌚\n8:00 AM to 8:00 PM (Daily)'
+              'For any concerns, or inquiries, reach us at:\n\n📞\n+63 999 999 9999\n\n📧\nteam59parkingmanagement@gmail.com\n\n⌚\n8:00 AM to 5:00 PM (Daily)'
             )}>
             <Icon name="phone" style={styles.icon} />
             <Text style={styles.NavText}>Contact Us</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.NavContainer} onPress={() => handleArrowPress(
               'Report a Problem', 
-              'Encountered a bug or error? Report it to:\n\n📧 moniqueangela@gmail.com\n\nPlease include your name, contact number, and a detailed description of the encountered problem'
+              'Encountered a bug or error? Report it to:\n\n📧 team59parkingmanagement@gmail.com\n\nPlease include your name, contact number, and a detailed description of the encountered problem'
             )}>
             <Icon name="bug-report" style={styles.icon} />
             <Text style={styles.NavText}>Report a Problem</Text>

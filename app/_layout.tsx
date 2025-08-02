@@ -26,12 +26,18 @@ export default function RootLayout() {
         options={{
           headerTitle: "Driver Information",
           headerShown: true,
+          headerStyle: { backgroundColor: '#151533' },
+          headerTitleStyle: { color: '#fff' },
+          headerTintColor: '#fff',
         }} />
         <Stack.Screen 
         name="vehicleinfo" 
         options={{
           headerTitle: "Vehicle Information",
           headerShown: true,
+          headerStyle: { backgroundColor: '#151533' },
+          headerTitleStyle: { color: '#fff' },
+          headerTintColor: '#fff',
         }} />
       <Stack.Screen 
         name="dashboard" 
@@ -44,36 +50,36 @@ export default function RootLayout() {
         options={{
           headerTitle: "Parking Availability",
           headerShown: true,
-        }} />
-        <Stack.Screen 
-        name="parkconfirm" 
-        options={{
-          headerTitle: "Parking Confirmation",
-          headerShown: false,
-        }} />
-        <Stack.Screen 
-        name="parkreceipt" 
-        options={{
-          headerTitle: "Parking Receipt",
-          headerShown: false,
+          headerStyle: { backgroundColor: '#151533' },
+          headerTitleStyle: { color: '#fff' },
+          headerTintColor: '#fff',
         }} />
         <Stack.Screen 
         name="notification" 
         options={{
           headerTitle: "Notification",
           headerShown: true,
+          headerStyle: { backgroundColor: '#151533' },
+          headerTitleStyle: { color: '#fff' },
+          headerTintColor: '#fff',
         }} />
         <Stack.Screen 
         name="userprofile" 
         options={{
           headerTitle: "Profile",
           headerShown: true,
+          headerStyle: { backgroundColor: '#151533' },
+          headerTitleStyle: { color: '#fff' },
+          headerTintColor: '#fff',
         }} />
         <Stack.Screen 
         name="help" 
         options={{
           headerTitle: "Help & Support",
           headerShown: true,
+          headerStyle: { backgroundColor: '#151533' },
+          headerTitleStyle: { color: '#fff' },
+          headerTintColor: '#fff',
         }} />
     </Stack>
   );

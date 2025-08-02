@@ -1,0 +1,52 @@
+# Node modules and dependencies
+node_modules/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Expo and build artifacts
+.expo/
+dist/
+web-build/
+*.tsbuildinfo
+
+# macOS and system files
+.DS_Store
+
+# Environment and secrets
+.env*
+*.pem
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Native
+*.orig.*
+
+# TypeScript
+expo-env.d.ts
+
+# Example or test files
+app-example
+
+# Exclude raw assets not needed for build
+assets/raw/
+assets/videos/
+assets/large-images/
+docs/
+test/
+*.mp4
+*.mov
+*.zip
+*.rar
+*.7z
+*.psd
+*.ai
+*.sketch
+
+# Any other large or unnecessary files/folders
